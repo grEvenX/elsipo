@@ -215,10 +215,17 @@ int Pjsip::addSIPUA()
 
         cfg.reg_uri = pj_str(strdup(pjRegistrarURI.toLatin1().data()));
 
+        cfg.allow_contact_rewrite = true;
+
         cfg.cred_count = 1;
-        cfg.cred_info[0].realm = pj_str(strdup(pjSrvDomain.toAscii().data()));
+        // cfg.cred_info[0].realm = pj_str(strdup(pjSrvDomain.toAscii().data()));
+        cfg.cred_info[0].realm = pj_str((char*)"*");
         cfg.cred_info[0].scheme = pj_str((char*)"digest");
         cfg.cred_info[0].username = pj_str(strdup(pjUser.toAscii().data()));
+
+        qDebug() << "Testing with username:" << pjUser
+                 << ", password: " << pjPassword;
+
         cfg.cred_info[0].data_type = PJSIP_CRED_DATA_PLAIN_PASSWD;
         cfg.cred_info[0].data = pj_str(strdup(pjPassword.toAscii().data()));
 
@@ -448,6 +455,108 @@ void Pjsip::slot_on_call_media_state(pjsua_call_id call_id)
         pjsua_conf_connect(0, ci.conf_slot);
     }
 }
+
+QVariantList Pjsip::getAudioInputDeviceList()
+{
+    return this->getAudioDeviceList("input");
+}
+
+QVariantList Pjsip::getAudioOutputDeviceList()
+{
+    return this->getAudioDeviceList("output");
+}
+
+QVariantList Pjsip::getAudioDeviceList(QString inOrOut)
+{
+    int dev_count;
+    QVariantList deviceListMap;
+
+    pjmedia_aud_dev_index dev_idx;
+    pj_status_t status;
+
+    dev_count = pjmedia_aud_dev_count();
+    printf("Got %d audio devices\n", dev_count);
+
+    for (dev_idx=0; dev_idx<dev_count; ++dev_idx) {
+        pjmedia_aud_dev_info info;
+
+        status = pjmedia_aud_dev_get_info(dev_idx, &info);
+        if (status == PJ_SUCCESS) {
+            pjmedia_aud_dev_info info;
+
+            status = pjmedia_aud_dev_get_info(dev_idx, &info);
+            printf("Device capabilities: ");
+
+                    for (unsigned i=0; i<32; ++i) {
+                        if (info.caps & (1 << i))
+                            printf("%s ", pjmedia_aud_dev_cap_name((pjmedia_aud_dev_cap) (1 << i), NULL));
+                    }
+
+            int channel_count;
+            if (inOrOut == "input") {
+                channel_count = info.input_count;
+            } else if (inOrOut == "output") {
+                channel_count = info.output_count;
+            }
+
+            if (channel_count > 0) {
+                printf("%d. %s (driver=%s, in=%d, out=%d)\n",
+                       dev_idx, info.name,
+                       info.driver,
+                       info.input_count, info.output_count);
+
+                deviceListMap += info.name;
+            }
+        }
+
+    }
+
+    return deviceListMap;
+}
+
+void Pjsip::setActiveInputAudioDevice(QString deviceName)
+{
+    return this->setActiveAudioDevice("input", deviceName);
+}
+
+void Pjsip::setActiveOutputAudioDevice(QString deviceName)
+{
+    return this->setActiveAudioDevice("output", deviceName);
+}
+
+void Pjsip::setActiveAudioDevice(QString direction, QString deviceName)
+{
+    int inputIndex;
+    int outputIndex;
+    pj_status_t status;
+
+    char *drv_name = "PA";
+    char *dev_name = deviceName.toLatin1().data();
+
+    pjsua_get_snd_dev(&inputIndex, &outputIndex);
+    if (direction == "input") {
+        inputIndex = (int) this->getDeviceIndex(drv_name, dev_name);
+    } else if (direction == "output") {
+        outputIndex = (int) this->getDeviceIndex(drv_name, dev_name);
+    }
+
+    status = pjsua_set_snd_dev(inputIndex, outputIndex);
+}
+
+pjmedia_aud_dev_index Pjsip::getDeviceIndex(char *drv_name, char *dev_name)
+{
+    pjmedia_aud_param param;
+    pj_status_t status;
+    pjmedia_aud_dev_index dev_idx;
+
+    status = pjmedia_aud_dev_lookup(drv_name, dev_name, &dev_idx);
+    if (status==PJ_SUCCESS) {
+        printf("Device index is %d\n", dev_idx);
+        return dev_idx;
+    }
+    return -1;
+}
+
 
 int Pjsip::doCall(QString uri)
 {

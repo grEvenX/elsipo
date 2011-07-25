@@ -42,6 +42,10 @@ public slots:
     int doCallHangup();
     int sendIM(QString uri, QString msg);
     int registerJSCallback(QString event, QString jsf);
+    QVariantList getAudioInputDeviceList();
+    QVariantList getAudioOutputDeviceList();
+    void setActiveInputAudioDevice(QString deviceName);
+    void setActiveOutputAudioDevice(QString deviceName);
 
     void slot_on_reg_state(int rcv_acc_id);
     void slot_on_message_request(QString from, QString ctype, QString body);
@@ -70,6 +74,9 @@ private:
     int activePjCall;
     int activePjCallID;
     QString escapeJavascriptString(const QString & pstr);
+    QVariantList getAudioDeviceList(QString inOrOut);
+    pjmedia_aud_dev_index getDeviceIndex(char *drv_name, char *dev_name);
+    void setActiveAudioDevice(QString direction, QString deviceName);
 };
 
 

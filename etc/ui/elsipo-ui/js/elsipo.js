@@ -167,3 +167,50 @@ function sipcb_call_ended() {
 	document.getElementById('b_reset').value="...";
 	document.getElementById('i_address').value = "Type the address to dial...";
 }
+
+$(document).ready(function() {
+	
+	window.open('newtest.html');
+	
+	// fill list of audio devices
+	$('#i_infotext').append("Trying to fetch audio device list<br />");
+	try {
+		var inputDevices = sip.getAudioInputDeviceList();
+		
+		$('#i_infotext').append('Found ' + inputDevices.length + " audio devices<br />");
+		for (var i = 0; i < inputDevices.length; i++) {
+			$('#i_infotext').append("&nbsp;&nbsp;&nbsp; Device: " + inputDevices[i] + "<br />");
+			$('#inputDeviceSelector').append($('<option></option>').text(inputDevices[i]));
+		}
+		
+		$('#inputDeviceSelector').change(function() {
+			var selcetedDevice = $("#inputDeviceSelector option:selected").val();
+			alert("Setting active input device to: " + selcetedDevice);
+			sip.setActiveInputAudioDevice(selcetedDevice);
+		});
+		
+	} catch (e) {
+		$('#i_infotext').append("[ERROR] Failed getting input device list: " + e + "<br />");
+	}
+	
+	try {
+		var outputDevices = sip.getAudioOutputDeviceList();
+		
+		$('#i_infotext').append('Found ' + outputDevices.length + " audio devices<br />");
+		for (var i = 0; i < outputDevices.length; i++) {
+			$('#i_infotext').append("&nbsp;&nbsp;&nbsp; Device: " + outputDevices[i] + "<br />");
+			$('#outputDeviceSelector').append($('<option></option>').text(outputDevices[i]));
+		}
+		
+		$('#outputDeviceSelector').change(function() {
+			var selcetedDevice = $("#outputDeviceSelector option:selected").val();
+			alert("Setting active output device to: " + selcetedDevice);
+			sip.setActiveOutputAudioDevice(selcetedDevice);
+		});
+
+	} catch (e) {
+		$('#i_infotext').append("[ERROR] Failed getting output device list: " + e + "<br />");
+	}
+	
+	
+});

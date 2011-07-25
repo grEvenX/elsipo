@@ -6,7 +6,6 @@
 	<meta name="keywords" content="sip voip softphone browser">
 	<meta name="description" content="">
 	<link rel="stylesheet" type="text/css" href="css/elsipo.css">
-	<script type="text/javascript" src="js/elsipo.js"></script>
 </head>
 <body>
 	<div align="center">
@@ -33,6 +32,14 @@
 					onClick="sipjs_do_call()">
 				<input id="b_reset" name="reset" type="button" class="i_button" value="..."
 						onClick="sipjs_do_call_reject()" disabled>
+			</div>
+			
+			<div>
+				<label for="inputDeviceSelector">Sound input device:</label><select name="input_device" id="inputDeviceSelector"></select>
+			</div>
+			<div>
+				<label for="outputDeviceSelector">Sound output device:</label><select name="output_device"
+				 id="outputDeviceSelector"></select>
 			</div>
 		</fieldset>
 		<fieldset class="contact">
@@ -64,4 +71,7 @@
 		</fieldset>
 	</form>
 	</div>
+	
+	<script type="text/javascript" src="js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="js/elsipo.js"></script>
 </body></html>
